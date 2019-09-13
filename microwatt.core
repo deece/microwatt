@@ -27,6 +27,7 @@ filesets:
       - insn_helpers.vhdl
       - core.vhdl
       - icache.vhdl
+      - control.vhdl
     file_type : vhdlSource-2008
 
   soc:
