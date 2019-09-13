@@ -49,11 +49,15 @@ architecture behaviour of decode2 is
 
 	function decode_input_reg_a (t : input_reg_a_t; insn_in : std_ulogic_vector(31 downto 0);
 				     reg_data : std_ulogic_vector(63 downto 0)) return decode_input_reg_t is
+		variable is_reg : std_ulogic;
 	begin
+		is_reg := '0' when insn_ra(insn_in) = "00000" else '1';
+
 		case t is
 		when RA =>
 			return ('1', insn_ra(insn_in), reg_data);
 		when RA_OR_ZERO =>
+			--return (is_reg, insn_ra(insn_in), ra_or_zero(reg_data, insn_ra(insn_in)));
 			return ('1', insn_ra(insn_in), ra_or_zero(reg_data, insn_ra(insn_in)));
 		when RS =>
 			return ('1', insn_rs(insn_in), reg_data);
@@ -176,11 +180,24 @@ architecture behaviour of decode2 is
 		end case;
 	end;
 
+	-- issue control signals
 	signal control_valid_in : std_ulogic;
 	signal control_valid_out : std_ulogic;
 	signal control_sgl_pipe : std_logic;
+
+	signal gpr_write_valid : std_ulogic;
+	signal gpr_write : std_ulogic_vector(4 downto 0);
+
+	signal gpr_a_read_valid : std_ulogic;
+	signal gpr_a_read : std_ulogic_vector(4 downto 0);
+
+	signal gpr_b_read_valid : std_ulogic;
+	signal gpr_b_read : std_ulogic_vector(4 downto 0);
+
+	signal gpr_c_read_valid : std_ulogic;
+	signal gpr_c_read : std_ulogic_vector(4 downto 0);
 begin
-	decode2_0: entity work.control
+	control0: entity work.control
 	generic map (
 		PIPELINE_DEPTH => 2
 	)
@@ -193,11 +210,23 @@ begin
 		flush_in    => flush_in,
 		sgl_pipe_in => control_sgl_pipe,
 
+		gpr_write_valid_in => gpr_write_valid,
+		gpr_write_in       => gpr_write,
+
+		gpr_a_read_valid_in  => gpr_a_read_valid,
+		gpr_a_read_in        => gpr_a_read,
+
+		gpr_b_read_valid_in  => gpr_b_read_valid,
+		gpr_b_read_in        => gpr_b_read,
+
+		gpr_c_read_valid_in  => gpr_c_read_valid,
+		gpr_c_read_in        => gpr_c_read,
+
 		valid_out   => control_valid_out,
 		stall_out   => stall_out
 	);
 
-	decode2_1: process(clk)
+	decode2_0: process(clk)
 	begin
 		if rising_edge(clk) then
 			if rin.e.valid = '1' or rin.l.valid = '1' or rin.m.valid = '1' then
@@ -221,7 +250,7 @@ begin
 
 	c_out.read <= d_in.decode.input_cr;
 
-	decode2_2: process(all)
+	decode2_1: process(all)
 		variable v : reg_type;
 		variable mul_a : std_ulogic_vector(63 downto 0);
 		variable mul_b : std_ulogic_vector(63 downto 0);
@@ -329,6 +358,18 @@ begin
 		-- issue control
 		control_valid_in <= d_in.valid;
 		control_sgl_pipe <= d_in.decode.sgl_pipe;
+
+		gpr_write_valid <= '1' when d_in.decode.output_reg_a /= NONE else '0';
+		gpr_write <= decode_output_reg(d_in.decode.output_reg_a, d_in.insn);
+
+		gpr_a_read_valid <= decoded_reg_a.reg_valid;
+		gpr_a_read <= decoded_reg_a.reg;
+
+		gpr_b_read_valid <= decoded_reg_b.reg_valid;
+		gpr_b_read <= decoded_reg_b.reg;
+
+		gpr_c_read_valid <= decoded_reg_c.reg_valid;
+		gpr_c_read <= decoded_reg_c.reg;
 
 		v.e.valid := '0';
 		v.m.valid := '0';

@@ -12,6 +12,7 @@ all: $(all)
 	$(GHDL) -a $(GHDLFLAGS) $<
 
 common.o: decode_types.o
+control.o: gpr_hazard.o
 core_tb.o: common.o core.o soc.o
 core.o: common.o wishbone_types.o fetch1.o fetch2.o icache.o decode1.o decode2.o register_file.o cr_file.o execute1.o execute2.o loadstore1.o loadstore2.o multiply.o writeback.o
 cr_file.o: common.o

@@ -28,6 +28,7 @@ filesets:
       - core.vhdl
       - icache.vhdl
       - control.vhdl
+      - gpr_hazard.vhdl
     file_type : vhdlSource-2008
 
   soc:
