@@ -11,7 +11,7 @@ static uint64_t potato_uart_base;
 
 #define PROC_FREQ 50000000
 #define UART_FREQ 115200
-#define UART_BASE 0xc0002000
+#define UART_BASE 0xc0000000
 
 #define POTATO_CONSOLE_TX		0x00
 #define POTATO_CONSOLE_RX		0x08
